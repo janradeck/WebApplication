@@ -1,0 +1,16 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+*.java
+*.txt
+*.class
+*.info
+/languages/WebApplication/classes_gen/
+/languages/WebApplication/source_gen/
+/languages/WebApplication/source_gen.caches
+/languages/WebApplication/generator/classes_gen/
+/languages/WebApplication/generator/source_gen/
+/languages/WebApplication/generator/source_gen.caches
+solutions/Playground/classes_gen/
+solutions/Playground/source_gen/
+solutions/Playground/source_gen.caches/
