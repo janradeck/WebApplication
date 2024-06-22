@@ -314,6 +314,413 @@ switch ($method) {
 
 Currently the user interface code is written entirely by hand.
 
+Here is the source code of the robot configuration wizard, robotconfigurator.component.ts:
+
+``` JavaScript
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { MatStepper } from '@angular/material/stepper';
+import { HttpClient } from '@angular/common/http';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
+import { RobotBrandGetDTO } from '../../generated/models/robotbrandgetdto.model';
+import { RobotModelGetDTO } from '../../generated/models/robotmodelgetdto.model';
+import { ModelVariantGetDTO } from '../../generated/models/modelvariantgetdto.model';
+import { AddOnGetDTO } from '../../generated/models/addongetdto.model';
+import { AddOnSaveDTO } from '../../generated/models/addonsavedto.model';
+import { RobotConfigSaveDTO } from '../../generated/models/robotconfigsavedto.model';
+import { RobotConfigFullSaveDTO } from '../../generated/models/robotconfigfullsavedto.model';
+import { RobotBrandGetDTOService } from '../../generated/services/robotbrandgetdto.service';
+import { RobotModelGetDTOService } from '../../generated/services/robotmodelgetdto.service';
+import { ModelVariantGetDTOService } from '../../generated/services/modelvariantgetdto.service';
+import { AddOnGetDTOService } from '../../generated/services/addongetdto.service';
+import { RobotConfigFullSaveDTOService } from '../../generated/services/robotconfigfullsavedto.service';
+
+@Component({
+  selector: 'app-robotconfigurator',
+  templateUrl: './robotconfigurator.component.html',
+  styleUrls: ['./robotconfigurator.component.css'],
+})
+export class RobotConfiguratorComponent implements OnInit {
+@ViewChild('stepper', { static: true }) stepper!: MatStepper;	
+  configuration: RobotConfigSaveDTO = new RobotConfigSaveDTO ('', new Date, -1, -1, -1);
+  brands: RobotBrandGetDTO[]= [];
+  models: RobotModelGetDTO[]= [];
+  variants: ModelVariantGetDTO[]= [];
+  addOns: AddOnGetDTO[] = [];
+  selectedBrand: string = '';
+  selectedModel: string = '';
+  selectedVariant: string = '';
+  selectedAddOns: AddOnGetDTO[] = [];
+  variantPrice = 0;
+  totalPrice = 0;
+
+  constructor(
+    private robotBrandService: RobotBrandGetDTOService,
+    private robotModelService: RobotModelGetDTOService,
+    private modelVariantService: ModelVariantGetDTOService,
+	private addOnService: AddOnGetDTOService,
+    private robotConfigSaveService: RobotConfigFullSaveDTOService,
+	private snackBar: MatSnackBar	
+	
+  ) {
+  }
+
+  ngOnInit() {
+    this.stepper.selectedIndex = 0;	
+    this.loadRobotBrands();
+	console.log('ngOnInit RobotConfigurator');
+  }
+
+  private loadRobotBrands() {
+	console.log('loadRobotBrands RobotConfigurator');
+    this.robotBrandService.getRobotBrandsAll().subscribe({
+	  next: (data: RobotBrandGetDTO[]) => {
+      this.brands = data; },
+		error: (e) => console.error(e)
+        });
+  }
+
+  selectBrand(brand: RobotBrandGetDTO) {
+    this.configuration.brand = brand.id;
+	this.selectedBrand = brand.name;
+	this.selectedModel = '';
+	this.selectedVariant = '';
+	this.selectedAddOns = [];	
+	this.configuration.configurationname = '';
+    this.loadRobotModels();
+  }
+
+  private loadRobotModels() {
+    this.robotModelService
+      .getRobotModelsByBrand(this.configuration.brand)
+      .subscribe((models: RobotModelGetDTO[]) => {
+        this.models = models;
+        this.stepper.selectedIndex = 1;
+      });
+  }
+
+  selectModel(model: RobotModelGetDTO) {
+    this.configuration.model = model.id;
+	this.selectedModel = model.name;
+	this.selectedVariant = '';
+	this.selectedAddOns = [];
+	this.configuration.configurationname = '';
+    this.loadModelVariants();
+  }
+
+  private loadModelVariants() {
+    this.modelVariantService
+      .getVariantsForModel(this.configuration.model)
+      .subscribe((variants: ModelVariantGetDTO[]) => {
+        this.variants = variants;
+        this.stepper.selectedIndex = 2;
+      });
+  }
+
+  selectVariant(variant: ModelVariantGetDTO) {
+    this.configuration.variant = variant.id;
+	this.selectedVariant = variant.name;
+	this.selectedAddOns = [];
+	this.configuration.configurationname = '';
+	this.variantPrice = variant.price;
+	this.totalPrice = this.variantPrice;
+	this.loadAddons();
+  }
+
+  private loadAddons() {
+    this.addOnService
+      .getAddonsForVariant(this.configuration.variant)
+      .subscribe((addOns: AddOnGetDTO[]) => {
+        this.addOns = addOns;
+        this.stepper.selectedIndex = 3;
+      });
+  }
+  
+  toggleAddOnSelection(addOn: AddOnGetDTO) {
+    const index = this.selectedAddOns.indexOf(addOn);
+    if (index === -1) {
+      this.selectedAddOns.push(addOn);
+    } else {
+      this.selectedAddOns.splice(index, 1);
+    }
+	this.updatePrice();
+  }  
+  
+  updatePrice() {
+	this.totalPrice = this.variantPrice;
+	for (const selectedAddOn of this.selectedAddOns) {
+		this.totalPrice = this.totalPrice + selectedAddOn.price;
+	}	  
+  }
+
+  isSelectedAddOn(addOn: AddOnGetDTO): boolean {
+    return this.selectedAddOns.some((selected) => selected.id === addOn.id);
+  }  
+
+ continueToSaveConfiguration() {
+	this.configuration.configurationname = this.selectedBrand + " " + this.selectedModel + " " + this.selectedVariant;
+    this.stepper.selectedIndex = 4;
+  }  
+  
+  saveConfiguration() {
+    this.configuration.configurationdate = new Date();
+	let addonSaveDto : AddOnSaveDTO[] = [];
+	for (const selectedAddOn of this.selectedAddOns) {
+	  // Creating a new AddOnSaveDTO for each element
+	  const newAddOnSaveDTO = new AddOnSaveDTO(selectedAddOn.id);
+
+	  // Adding the new element to the addOns list
+	  addonSaveDto.push(newAddOnSaveDTO);
+	}
+	
+	let saveDto: RobotConfigFullSaveDTO = new RobotConfigFullSaveDTO(this.configuration, addonSaveDto);
+    this.robotConfigSaveService.save(saveDto).subscribe(
+      (result) => {
+        // Handle successful save
+        this.stepper.selectedIndex = 5;		
+        console.log('Configuration saved successfully:', result);
+      },
+      (error) => {
+        // Handle error
+        console.error('Error saving configuration:', error);
+      }
+    );
+  }
+  
+  restart() {
+    this.stepper.selectedIndex = 0;		  
+    this.selectedBrand = '';
+	this.selectedModel = '';
+	this.selectedVariant = '';
+	this.selectedAddOns = [];
+	this.configuration.configurationname = '';	
+  }
+}
+```
+
+The source code for the HTML:
+
+``` HTML
+<!-- robotconfigurator.component.html -->
+<div>
+<h2>Welcome to the Robot Configurator</h2>
+</div>
+
+<mat-vertical-stepper [linear]="true" #stepper>
+  <!-- First Page -->
+
+  <mat-step label="Select brand">
+    <ng-template cdkStepLabel>Select Brand</ng-template>
+	<table>
+	<tbody>
+		<tr *ngFor="let brand of brands">
+	  <td class="logo"><img src="/robotconfig/logos/{{ brand.logo }}.jpg" (click)="selectBrand(brand)" width="200px" height="auto"></td>
+	  <td class="pad calign">
+	  <div class="brand-name">{{ brand.name }}</div>
+	  <div class="brand-slogan">{{ brand.slogan }}</div>
+	  </td>
+	  </tr>
+	  </tbody>
+	</table>
+  </mat-step>
+
+  <mat-step label="Select model">
+    <ng-template cdkStepLabel>Select Model</ng-template>
+	<div>{{this.selectedBrand}}</div>
+	<div>&nbsp;</div>
+    <div *ngIf="models">
+	<table>
+	<tbody>
+	<tr *ngFor="let model of models">
+		<td>
+		<td class="logo"><img src="/robotconfig/models/{{ this.selectedBrand }}-{{ model.name }}.png" (click)="selectModel(model)" height="200px" width="auto"></td>
+        <td class="pad">{{ model.name }}</td>
+	<td class="pad">{{ model.description }}</td>
+	</tr>
+	</tbody>
+	</table>
+	
+	</div>
+  </mat-step>
+
+  <mat-step label="Select variant">
+    <ng-template cdkStepLabel>Select Variant</ng-template>
+	<div>{{this.selectedBrand}} | {{this.selectedModel}} </div>
+	<div>
+	<img src="/robotconfig/models/{{ this.selectedBrand }}-{{ this.selectedModel }}.png" height="200px" width="auto">
+	</div>
+	<div>&nbsp;</div>
+    <div *ngIf="variants">
+	<table>
+	<thead>
+	<tr>
+	<th></th>
+	<th class="pad">Variant</th>
+	<th class="ralign pad">Base price</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr *ngFor="let variant of variants">
+	<td>
+      <button
+		(click)="selectVariant(variant)">
+        Select
+      </button>
+	  </td>
+	  <td class="pad">{{ variant.name }}</td>
+	  <td class="pad ralign">{{ variant.price }} EUR</td>
+	  </tr>
+	  </tbody>
+	</table>
+	    </div>
+  </mat-step>
+
+  <mat-step label="Select add-on">
+    <ng-template cdkStepLabel>Select AddOn</ng-template>
+	<div>{{this.selectedBrand}} | {{this.selectedModel}} | {{this.selectedVariant}}</div>
+	<div>
+	<img src="/robotconfig/models/{{ this.selectedBrand }}-{{ this.selectedModel }}.png" height="200px" width="auto">
+	</div>	
+	<div>&nbsp;</div>
+    <div *ngIf="addOns">
+	<table>
+	<thead>
+	<tr>
+	<th></th>
+	<th class="pad">Add-On</th>
+	<th class="pad">Description</th>
+	<th class="pad ralign">Add-On price</th>
+	</tr>
+	</thead>	
+	<tbody>
+	<tr *ngFor="let addOn of addOns">
+	<td>
+<label>
+        <input
+          type="checkbox"
+          [checked]="isSelectedAddOn(addOn)"
+          (change)="toggleAddOnSelection(addOn)"
+        />
+          </label>
+	  </td>
+	  <td class="pad">
+	  {{ addOn.name }}
+	  </td>
+	  <td class="pad">{{ addOn.description }}</td>
+	  <td class="ralign">{{ addOn.price }}</td>
+	  <td>EUR</td>
+	  </tr>
+  	  <tr>
+	  <td></td>
+	  <td class="vpad pad lalign pvariant" colspan="2">Base price</td>
+	  <td class="vpad ralign pvariant">{{ this.variantPrice }}</td>
+	  <td class="pvariant">EUR</td>
+	  </tr>
+
+	  <tr>
+	  <td></td>
+	  <td class="pad lalign psum" colspan="2">Total price</td>
+	  <td class="ralign psum">{{ this.totalPrice }}</td>
+	  <td class="psum">EUR</td>
+	  </tr>
+	  </tbody>
+	  </table>
+	    </div>
+      <button (click)="continueToSaveConfiguration()">Continue</button>
+  </mat-step>
+  <mat-step label="Save">
+    <ng-template cdkStepLabel>Save Configuration</ng-template>
+<table>
+		<tr class="table-row">
+			<td>Brand:</td>
+			<td>{{this.selectedBrand}}</td>
+		</tr>
+		<tr class="table-row">
+			<td>Model:</td>
+			<td>{{this.selectedModel}}</td>
+		</tr>
+		<tr>
+			<td>Variant:</td>
+			<td>{{this.selectedVariant}}</td>
+		</tr>
+		<tr>
+			<td>AddOns:</td>
+			<td>
+			<ul>
+				<div *ngFor="let addOn of this.selectedAddOns">
+				<li>{{ addOn.name }}</li>
+				</div>
+			</ul>
+			</td>
+		</tr>
+		<tr>
+		<td>Configuration name:</td>
+		<td>      <input
+        id="configName"
+        type="text"
+		size="50"
+        [(ngModel)]="configuration.configurationname"
+		/>
+</td>
+		</tr>
+		
+	</table>	
+	<div>&nbsp;</div>
+    <div>
+      <label for="configName">&nbsp;</label>
+      <button
+        [disabled]="configuration.configurationname.length <= 2"
+        (click)="saveConfiguration()"
+      >
+        Save
+      </button>
+    </div>
+  </mat-step>
+  <mat-step label="Summary">
+    <ng-template cdkStepLabel>Save success</ng-template>
+	<h3>Configuration saved successfully!</h3>
+	<table>
+		<tr class="table-intro" >
+			<td>Configuration:</td>
+			<td>{{ this.configuration.configurationname }}</td>
+		</tr>
+		<tr class="table-row">
+			<td>Brand:</td>
+			<td>{{this.selectedBrand}}</td>
+		</tr>
+		<tr class="table-row">
+			<td>Model:</td>
+			<td>{{this.selectedModel}}</td>
+		</tr>
+		<tr>
+			<td>Variant:</td>
+			<td>{{this.selectedVariant}}</td>
+		</tr>
+		<tr>
+			<td>AddOns:</td>
+			<td>
+			<ul>
+				<div *ngFor="let addOn of this.selectedAddOns">
+				<li>{{ addOn.name }}</li>
+				</div>
+			</ul>
+			</td>
+		</tr>		
+	</table>
+	<div>&nbsp;</div>
+    <div>
+      <button
+        (click)="restart()"
+      >
+        Back
+      </button>
+    </div>
+  </mat-step>
+  
+</mat-vertical-stepper>
+
+```
+
 ### Documentation links
 
 [Readme](../readme.md)  |  [How to..](HowTo.md) |  [What is..](Explanation.md) | [Reference](Reference.md)

@@ -7,7 +7,7 @@
 If you want to understand the generation, I would recommend taking a look at the following aspects:
 
 * The concepts and the relationships between them.
-* The utility classes used for the generation step. The source is documented.
+* The utility classes used for the generation step. The documentation in the source code might be of help.
 * The templates.
 
 ### Adding PUT methods to the language
