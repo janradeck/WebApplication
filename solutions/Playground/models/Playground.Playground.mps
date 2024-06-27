@@ -459,6 +459,10 @@
       </node>
       <node concept="3_F9ED" id="6tobGgtKnOP" role="3_F9Ev">
         <property role="TrG5h" value="title" />
+        <node concept="38U5U8" id="5RpRfpdgMCP" role="38U5UL">
+          <property role="38U5U9" value="length is greater than 2" />
+          <property role="38U5UN" value="Title is too short" />
+        </node>
       </node>
     </node>
   </node>

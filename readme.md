@@ -58,4 +58,4 @@ Things that need to be done:
 
 The structure of the documentation was inspired by the [Divio Documentation System](https://docs.divio.com/documentation-system/)
 
-[How to...](doc/HowTo.md)  |  [What is..](doc/Explanation.md)  |  [Reference](doc/Reference.md)
+[How to...](doc/HowTo.md)  |  [Explanations](doc/Explanation.md)  |  [Reference](doc/Reference.md)

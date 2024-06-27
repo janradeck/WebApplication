@@ -1,6 +1,10 @@
 # Tutorial
 
-## Create your first application
+## Purpose of this document
+
+A small, step-by-step lesson, to give you an idea what you can do with the WebApplication language.
+
+## Create your persistence layer
 
 ### Overview
 
@@ -312,11 +316,16 @@ switch ($method) {
 
 ### Write custom code
 
-Currently the user interface code is written entirely by hand.
+Currently the user interface code is **not** generated, but written by hand.
 
-Here is the source code of the robot configuration wizard, robotconfigurator.component.ts:
+To give you an idea how the generated code can be used,  here is the source code of the robot configuration wizard, robotconfigurator.
+
+I used ChatGPT to generate the code and then extended it.
+
+The code is **not** intended to be used in a production environment!
 
 ``` JavaScript
+// robotconfigurator.component.ts
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatStepper } from '@angular/material/stepper';
 import { HttpClient } from '@angular/common/http';
@@ -723,4 +732,4 @@ The source code for the HTML:
 
 ### Documentation links
 
-[Readme](../readme.md)  |  [How to..](HowTo.md) |  [What is..](Explanation.md) | [Reference](Reference.md)
+[Readme](../readme.md)  |  [How to..](HowTo.md) |  [Explanations](Explanation.md) | [Reference](Reference.md)

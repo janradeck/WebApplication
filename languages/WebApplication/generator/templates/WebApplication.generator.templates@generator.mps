@@ -1536,7 +1536,7 @@
           </node>
         </node>
         <node concept="356sEF" id="1g4fT7NAMyu" role="356sEH">
-          <property role="TrG5h" value=".model.ts)#" />
+          <property role="TrG5h" value=".ts)#" />
         </node>
         <node concept="2EixSi" id="1g4fT7NAMyQ" role="2EinRH" />
       </node>

@@ -1,5 +1,7 @@
 # Reference
 
+## Purpose of this document
+
 ## Class diagram
 
 ### Class hierarchy for the Entity
@@ -42,4 +44,4 @@ I have taken inspiration from the following sources
 
 ### Documentation links
 
-[Readme](../readme.md)  | [Tutorial](Tutorial.md)  |  [How to..](HowTo.md) | [Explanation](Explanation.md)
+[Readme](../readme.md)  | [Tutorial](Tutorial.md)  |  [How to..](HowTo.md) | [Explanations](Explanation.md)

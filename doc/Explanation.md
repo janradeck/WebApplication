@@ -1,5 +1,7 @@
 # Explanation
 
+## Purpose of this document
+
 Information that should help you gain a deeper understanding.
 
 ## Design decisions
@@ -53,8 +55,9 @@ The result is called UriBasedHandler.
 
 The following aspects were used:
 
-* Editor
-* Constraints
+#### Editor
+
+#### Constraints
 
 ![Constraints for referencing an entity field](images/WebApplication-Constraints-EntityFieldRef.png)
 
@@ -62,9 +65,24 @@ This is used in DtoDerived to make sure, that in the list "drop" you can only se
 
 ![Constraints for referencing an entity field](images/WebApplication-Constraints-EntityFieldRef-Example.png)
 
-* Validations
-* BaseLanguage, e.g. for the utility classes
-* Generator
+#### Validations
+
+#### BaseLanguage
+
+This is used extensively for the utility classes
+
+#### Generator
+
+
+### Generation flow for different target languages
+
+This image shows the flow for different target languages.
+
+The generator code places the source files for each target language in a different subdirectory.
+
+GPTGenerator can be configured to process each of these subdirectory individually. This is used to specify a different installation directory for each subdirectory (= target language).
+
+![Generation flow for different target languages](images/Generation-FlowForDifferentLanguages.png)
 
 ### Documentation links
 
